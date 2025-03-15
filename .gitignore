@@ -1,0 +1,29 @@
+.env
+# Ignorar entornos virtuales de Python
+venv/
+.venv/
+
+# Ignorar archivos de caché y compilación
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar configuraciones de VS Code
+.vscode/
+
+# Ignorar archivos de dependencias
+node_modules/
+.DS_Store  # Archivos de macOS
+
+# Otros
+ui/
+data/
+docs/
+scripts/
+tests/
+
+*.log
+*.tmp
+dist/
+src/

@@ -1,6 +1,8 @@
 import sys
 from PySide6 import QtWidgets
-from generated.ui_main_window import Ui_MainWindow  # Importa la UI generada
+from PySide6.QtUiTools import QUiLoader  # Importar QUiLoader para cargar el archivo .ui
+from PySide6.QtCore import QFile, QDir  # Para manejar el archivo .ui y rutas
+from PySide6.QtWidgets import QMessageBox  # Importar QMessageBox para mostrar mensajes
 
 # 📌 Importamos las clases de cada módulo
 from logica_aprontes import Aprontes
@@ -15,8 +17,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
+        self.cargar_ui()  # Cargar la interfaz desde el archivo .ui
         print("✅ Ventana principal cargada correctamente.")  # Debug
 
         # Conectar el menú lateral con la navegación
@@ -24,6 +25,32 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Placeholder para mantener la referencia de ventanas cargadas
         self.modulos_abiertos = {}  # 📌 Guardará las instancias de cada ventana
+
+    def cargar_ui(self):
+        """Carga el archivo .ui y asigna los widgets a self.ui"""
+        loader = QUiLoader()
+        ui_file = QFile("ui/main_window.ui")  # Ruta al archivo .ui
+        
+        if not ui_file.open(QFile.ReadOnly):
+            error_msg = f"No se pudo abrir el archivo UI: {ui_file.errorString()}"
+            print(error_msg)  # Mostrar el error en la consola
+            QMessageBox.critical(self, "Error", error_msg)  # Mostrar un mensaje de error
+            return
+        
+        self.ui = loader.load(ui_file, self)  # Cargar la interfaz
+        ui_file.close()
+        
+        if not self.ui:
+            error_msg = "Error al cargar la interfaz desde el archivo .ui"
+            print(error_msg)  # Mostrar el error en la consola
+            QMessageBox.critical(self, "Error", error_msg)  # Mostrar un mensaje de error
+            return
+        
+        # Asignar el widget central (mainContainer) al QMainWindow
+        self.setCentralWidget(self.ui.mainContainer)
+        
+        # Establecer el tamaño de la ventana principal según el archivo .ui
+        self.resize(1960, 1313)  # Tamaño definido en el archivo .ui
 
     def on_item_clicked(self, item, column):
         """ 📌 Cambia entre ventanas según el ítem seleccionado """
@@ -64,6 +91,17 @@ class MainWindow(QtWidgets.QMainWindow):
             self.modulos_abiertos[nombre] = nueva_ventana
             self.ui.mainStackedWidget.addWidget(nueva_ventana)
             self.ui.mainStackedWidget.setCurrentWidget(nueva_ventana)
+
+    def resizeEvent(self, event):
+        """Actualiza el tamaño de los módulos hijos"""
+        super().resizeEvent(event)
+        
+        # Ajustar tamaño del contenedor principal
+        self.ui.mainContainer.resize(self.size())
+        
+        # Ajustar cada módulo cargado
+        for modulo in self.modulos_abiertos.values():
+            modulo.resize(self.ui.mainStackedWidget.size())
 
 
 if __name__ == "__main__":

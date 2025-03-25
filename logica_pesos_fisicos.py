@@ -7,8 +7,10 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QCursor, QAction
 from PySide6 import QtCore
+from PySide6 import QtWidgets  # Importar QtWidgets explícitamente
+from PySide6.QtUiTools import QUiLoader  # Importar QUiLoader para cargar el archivo .ui
+from PySide6.QtCore import QFile  # Para manejar el archivo .ui
 
-from generated.ui_pesos_fisicos import Ui_PesosFisicos
 from db import SessionLocal
 from models.models import Caballos, Studs, Preparadores, ReunionCaballos, ReunionCarreras, ErroresComunes
 
@@ -17,8 +19,8 @@ class PesosFisicos(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.ui = Ui_PesosFisicos()
-        self.ui.setupUi(self)
+        self.cargar_ui()  # Cargar la interfaz desde el archivo .ui
+        print("✅ Ventana de pesos físicos cargada correctamente.")  # Debug
 
         # Carpeta de archivos originales
         self.carpeta_originales = "/Users/oscarorellana/Proyectos/colaboradores/originales"
@@ -1143,3 +1145,30 @@ class PesosFisicos(QWidget):
         except Exception as e:
             print(f"Error al generar nombre: {str(e)}")
             return nombre_original
+
+    def cargar_ui(self):
+        """Carga el archivo .ui y asigna los widgets a self.ui"""
+        loader = QUiLoader()
+        ui_file = QFile("ui/ui_pesos_fisicos.ui")  # Ruta al archivo .ui
+        
+        if not ui_file.open(QFile.ReadOnly):
+            error_msg = f"No se pudo abrir el archivo UI: {ui_file.errorString()}"
+            print(error_msg)  # Mostrar el error en la consola
+            QtWidgets.QMessageBox.critical(self, "Error", error_msg)  # Mostrar un mensaje de error
+            return
+        
+        self.ui = loader.load(ui_file, self)  # Cargar la interfaz
+        ui_file.close()
+        
+        if not self.ui:
+            error_msg = "Error al cargar la interfaz desde el archivo .ui"
+            print(error_msg)  # Mostrar el error en la consola
+            QtWidgets.QMessageBox.critical(self, "Error", error_msg)  # Mostrar un mensaje de error
+            return
+        
+        # Desactivar el "word wrap" en el QTextEdit
+        self.ui.txtTexto.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
+        
+        # Asignar la interfaz cargada como el layout de este widget
+        self.setLayout(self.ui.layout())
+

@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QCursor, QAction
 from PySide6 import QtCore, QtWidgets
 
-from generated.ui_programas import Ui_Programas
+#from generated.ui_programas import Ui_Programas
 from db import SessionLocal  # Para crear sesiones
 from models.models import Caballos  # Solo los modelos necesitados
 from models.models import Jinetes  # Solo los modelos necesitados
@@ -18,7 +18,7 @@ class Programas(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.ui = Ui_Programas()
+        # self.ui = Ui_Programas()
         self.ui.setupUi(self)
 
         # Conexiones de interfaz

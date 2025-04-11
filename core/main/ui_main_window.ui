@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1960</width>
+    <height>1313</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1187</width>
+    <height>906</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Semanarios © 2025 Oscar Orellana Casas</string>
+  </property>
+  <widget class="QWidget" name="mainContainer">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QTreeWidget" name="treeMenu">
+      <property name="maximumSize">
+       <size>
+        <width>200</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="headerHidden">
+       <bool>true</bool>
+      </property>
+      <property name="columnCount">
+       <number>1</number>
+      </property>
+      <property name="headerLabels" stdset="0">
+       <stringlist>
+        <string>Menú</string>
+       </stringlist>
+      </property>
+      <column>
+       <property name="text">
+        <string>1</string>
+       </property>
+      </column>
+      <item>
+       <property name="text">
+        <string>Semana actual</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Programas</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Apuestas</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Debutantes</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Comentarios</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Cambios de carreras</string>
+        </property>
+       </item>
+      </item>
+      <item>
+       <property name="text">
+        <string>Semana anterior</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Resultados</string>
+        </property>
+       </item>
+      </item>
+      <item>
+       <property name="text">
+        <string>Edición de texto</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Programas</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Resultados</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Aprontes</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Pesos físicos</string>
+        </property>
+       </item>
+      </item>
+      <item>
+       <property name="text">
+        <string>Producción</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Programas</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Resultados</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Estadísticas</string>
+        </property>
+       </item>
+      </item>
+      <item>
+       <property name="text">
+        <string>Utilidades</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Importación</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Actividades</string>
+        </property>
+       </item>
+      </item>
+      <property name="styleSheet">
+       <string>
+        QTreeWidget {
+          background-color: #2E3440;  /* Fondo oscuro */
+          color: #ECEFF4;             /* Letras blancas */
+          border: none;               /* Sin borde */
+          font-size: 20px;            /* Tamaño de fuente */
+          padding: 10px;              /* Espaciado interno */
+        }
+        QTreeWidget::item {
+          padding: 8px;               /* Espaciado entre ítems */
+        }
+        QTreeWidget::item:hover {
+          background-color: #4C566A;  /* Fondo al pasar el mouse */
+        }
+        QTreeWidget::item:selected {
+          background-color: #5E81AC;  /* Fondo al seleccionar */
+        }
+       </string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QStackedWidget" name="mainStackedWidget">
+      <widget class="QWidget" name="emptyPage">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QLabel" name="emptyLabel">
+          <property name="text">
+           <string>Contenido de la página</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1960</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

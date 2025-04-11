@@ -1,21 +1,13 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from configparser import ConfigParser
-from pathlib import Path
+from dotenv import load_dotenv
 
-# Leer configuración desde config.ini como respaldo
-config_path = Path(__file__).resolve().parent.parent / 'config.ini'
-config = ConfigParser()
-config.read(config_path)
+# Carga las variables de entorno
+load_dotenv()
 
-DATABASE_URL = (
-    f"mysql+pymysql://{os.getenv('DB_USER', config.get('database', 'user'))}:"
-    f"{os.getenv('DB_PASSWORD', config.get('database', 'password'))}@"
-    f"{os.getenv('DB_HOST', config.get('database', 'host'))}:"
-    f"{os.getenv('DB_PORT', config.get('database', 'port'))}/"
-    f"{os.getenv('DB_NAME', config.get('database', 'database'))}"
-)
+# Construye la cadena de conexión
+DATABASE_URL = f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
 
 # Configuración de SQLAlchemy
 engine = create_engine(DATABASE_URL, echo=False)

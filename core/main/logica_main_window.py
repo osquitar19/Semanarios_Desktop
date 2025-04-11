@@ -4,13 +4,11 @@ from PySide6.QtUiTools import QUiLoader  # Importar QUiLoader para cargar el arc
 from PySide6.QtCore import QFile, QDir  # Para manejar el archivo .ui y rutas
 from PySide6.QtWidgets import QMessageBox  # Importar QMessageBox para mostrar mensajes
 
-# 📌 Importamos las clases de cada módulo
-from logica_aprontes import Aprontes
-from logica_temporal import Temporal  # ✅ Importamos la nueva ventana
-from logica_programas import Programas  # ✅ Importamos módulos de Edición de texto
-from logica_resultados import Resultados  # ✅ Importamos módulos de Edición de texto
-from logica_pesos_fisicos import PesosFisicos  # ✅ Importamos módulos de Edición de texto
-# ⚠️ Cuando se agreguen más módulos, se importan aquí sus clases
+# 📌 Importamos las clases de cada módulo desde sus nuevas ubicaciones
+from core.edit_txt_aprontes.logica_aprontes import Aprontes
+from core.edit_txt_resultados.logica_resultados import Resultados
+from core.edit_txt_pesos_fisicos.logica_pesos_fisicos import PesosFisicos
+from core.produccion_xtg.logica_creacion_xtg import CreacionXTG  # Cambiado de Programas a CreacionXTG
 
 class MainWindow(QtWidgets.QMainWindow):
     """ Ventana principal que administra la navegación entre módulos """
@@ -29,7 +27,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def cargar_ui(self):
         """Carga el archivo .ui y asigna los widgets a self.ui"""
         loader = QUiLoader()
-        ui_file = QFile("ui/main_window.ui")  # Ruta al archivo .ui
+        ui_file = QFile("core/main/ui_main_window.ui")  # Ruta actualizada
         
         if not ui_file.open(QFile.ReadOnly):
             error_msg = f"No se pudo abrir el archivo UI: {ui_file.errorString()}"
@@ -58,9 +56,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Diccionario de módulos disponibles
         modulos = {
-            "Aprontes": Aprontes,  # Edición de texto > Aprontes
-            "Programas": Programas,  # Edición de texto > Programas
-            "Pesos físicos": PesosFisicos,  # Edición de texto > Pesos físicos
+            "Aprontes": Aprontes,          # Edición de texto > Aprontes
+            "Pesos físicos": PesosFisicos, # Edición de texto > Pesos físicos
         }
         
         # Obtener el texto del elemento padre para diferenciar secciones con el mismo nombre
@@ -70,13 +67,12 @@ class MainWindow(QtWidgets.QMainWindow):
             parent_text = parent.text(0)
             
         # Manejo especial para ítems con el mismo nombre en diferentes secciones
-        if nombre_item == "Resultados":
-            if parent_text == "Semana anterior":
-                self.cargar_modulo(nombre_item, Temporal)
-                return
-            elif parent_text == "Edición de texto":
-                self.cargar_modulo(nombre_item, Resultados)
-                return
+        if nombre_item == "Resultados" and parent_text == "Edición de texto":
+            self.cargar_modulo(nombre_item, Resultados)
+            return
+        elif nombre_item == "Programas" and parent_text == "Producción":
+            self.cargar_modulo(nombre_item, CreacionXTG)  # Actualizado para usar CreacionXTG
+            return
         if nombre_item in modulos:
             self.cargar_modulo(nombre_item, modulos[nombre_item])
 

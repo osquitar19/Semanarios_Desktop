@@ -38,7 +38,7 @@ class Aprontes(QtWidgets.QWidget):
     def cargar_ui(self):
         """Carga el archivo .ui y asigna los widgets a self.ui"""
         loader = QUiLoader()
-        ui_file = QFile("ui/ui_aprontes.ui")  # Ruta al archivo .ui
+        ui_file = QFile("core/edit_txt_aprontes/ui_aprontes.ui")  # Ruta actualizada
         
         if not ui_file.open(QFile.ReadOnly):
             error_msg = f"No se pudo abrir el archivo UI: {ui_file.errorString()}"
@@ -65,7 +65,9 @@ class Aprontes(QtWidgets.QWidget):
     # 1. CARGA Y CONVERSIÓN (transformaciones)
     # -------------------------------------------------------------------------
     def cargar_archivo(self, item):
-        ruta_archivo = os.path.join("/Users/oscarorellana/Proyectos/colaboradores/originales", item.text())
+        # Usar la misma lógica de ruta configurable
+        base_path = os.getenv("COLABORADORES_PATH", os.path.expanduser("~/Proyectos/colaboradores"))
+        ruta_archivo = os.path.join(base_path, "originales", item.text())
         try:
             with open(ruta_archivo, "r", encoding=self.obtener_codificacion()) as f:
                 lineas = f.readlines()
@@ -760,15 +762,22 @@ class Aprontes(QtWidgets.QWidget):
     # 4. GUARDAR ARCHIVO
     # -------------------------------------------------------------------------
     def guardar_archivo(self):
-        item = self.ui.listArchivos.currentItem()
-        if not item:
-            QMessageBox.warning(self, "Selección", "No se ha seleccionado ningún archivo.")
+        # Usar la misma lógica de ruta configurable
+        base_path = os.getenv("COLABORADORES_PATH", os.path.expanduser("~/Proyectos/colaboradores"))
+        nombre_archivo = self.ui.lblNombreNuevo.text()
+        
+        if not nombre_archivo:
+            QMessageBox.warning(self, "Error", "No hay archivo procesado para guardar.")
             return
-
+        
+        carpeta_destino = os.path.join(base_path, "procesados")
+        os.makedirs(carpeta_destino, exist_ok=True)
+        
+        ruta_destino = os.path.join(carpeta_destino, nombre_archivo)
+        
         contenido = self.ui.txtTexto.toPlainText()
-        nombre_nuevo = self.ui.lblNombreNuevo.text()
-        if not nombre_nuevo:
-            QMessageBox.warning(self, "Error", "No se ha generado un nuevo nombre de archivo.")
+        if not contenido:
+            QMessageBox.warning(self, "Error", "No hay contenido para guardar.")
             return
 
         # CheckBoxes
@@ -788,7 +797,7 @@ class Aprontes(QtWidgets.QWidget):
             if activo:
                 ruta_destino = f"/Users/oscarorellana/Proyectos/colaboradores/{nombre_carpeta}"
                 os.makedirs(ruta_destino, exist_ok=True)
-                ruta_archivo = os.path.join(ruta_destino, nombre_nuevo)
+                ruta_archivo = os.path.join(ruta_destino, nombre_archivo)
 
                 try:
                     with open(ruta_archivo, "w", encoding=self.obtener_codificacion()) as f:
@@ -822,7 +831,7 @@ class Aprontes(QtWidgets.QWidget):
                         self.actualizar_aprontes_en_bd(contenido)
                         
                         # Registrar la acción en el archivo de tareas realizadas
-                        self.registrar_tarea_realizada(ruta_trabajo, nombre_nuevo)
+                        self.registrar_tarea_realizada(ruta_trabajo, nombre_archivo)
                         
                         QMessageBox.information(self, "Guardado", "Archivo guardado en las carpetas seleccionadas y actualizado en la base de datos.")
                     except Exception as e:
@@ -879,90 +888,34 @@ class Aprontes(QtWidgets.QWidget):
         menu.addAction(vista_rapida)
         menu.exec(QCursor.pos())
 
-    def vista_rapida_archivo(self, nombre_archivo):
-        ruta_archivo = os.path.join("/Users/oscarorellana/Proyectos/colaboradores/originales", nombre_archivo)
+    def vista_rapida_archivo(self, archivo):
+        base_path = os.getenv("COLABORADORES_PATH", os.path.expanduser("~/Proyectos/colaboradores"))
+        ruta_archivo = os.path.join(base_path, "originales", archivo)
+        
         try:
             with open(ruta_archivo, "r", encoding=self.obtener_codificacion()) as f:
                 contenido = f.read()
-                
-            # Crear un diálogo mejorado para edición
-            from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPlainTextEdit, QPushButton
-            
-            class VistaRapidaDialog(QDialog):
-                def __init__(self, parent=None, nombre_archivo="", contenido="", ruta_archivo="", codificacion="latin-1"):
-                    super().__init__(parent)
-                    self.setWindowTitle(f"Vista Rápida - {nombre_archivo}")
-                    self.resize(700, 500)
-                    self.ruta_archivo = ruta_archivo
-                    self.codificacion = codificacion
-                    
-                    # Crear layout vertical para todo el diálogo
-                    layout = QVBoxLayout(self)
-                    
-                    # Editor de texto
-                    self.text_edit = QPlainTextEdit(self)
-                    self.text_edit.setPlainText(contenido)
-                    
-                    # Fuente monoespaciada
-                    font = QFont("Menlo", 12)
-                    self.text_edit.setFont(font)
-                    
-                    # Añadir al layout (se expandirá cuando se redimensione)
-                    layout.addWidget(self.text_edit)
-                    
-                    # Botones inferiores
-                    btn_layout = QHBoxLayout()
-                    
-                    self.btn_guardar = QPushButton("Guardar")
-                    self.btn_guardar.clicked.connect(self.guardar_cambios)
-                    
-                    self.btn_cerrar = QPushButton("Cerrar")
-                    self.btn_cerrar.clicked.connect(self.reject)
-                    
-                    btn_layout.addWidget(self.btn_guardar)
-                    btn_layout.addWidget(self.btn_cerrar)
-                    
-                    layout.addLayout(btn_layout)
-                    
-                    # Atajos de teclado
-                    self.shortcut_guardar = QShortcut(QKeySequence("Ctrl+S"), self)
-                    self.shortcut_guardar.activated.connect(self.guardar_cambios)
-                    
-                def guardar_cambios(self):
-                    try:
-                        contenido_nuevo = self.text_edit.toPlainText()
-                        with open(self.ruta_archivo, "w", encoding=self.codificacion) as f:
-                            f.write(contenido_nuevo)
-                        QMessageBox.information(self, "Guardado", "Los cambios han sido guardados correctamente.")
-                    except Exception as e:
-                        QMessageBox.critical(self, "Error", f"No se pudo guardar el archivo:\n{str(e)}")
-            
-            # Crear y mostrar el diálogo
-            dialogo = VistaRapidaDialog(
-                self, 
-                nombre_archivo=nombre_archivo, 
-                contenido=contenido, 
-                ruta_archivo=ruta_archivo,
-                codificacion=self.obtener_codificacion()
-            )
-            
-            dialogo.exec()
-            
+            return contenido
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"No se pudo abrir el archivo:\n{str(e)}")
+            return f"Error al leer el archivo: {str(e)}"
 
     def obtener_codificacion(self):
         return "latin-1" if self.ui.radioANSI.isChecked() else "utf-8"
 
     def cargar_lista_archivos(self):
-        carpeta_origen = "/Users/oscarorellana/Proyectos/colaboradores/originales"
+        """Carga la lista de archivos de aprontes del directorio configurado"""
+        # Usar variables de entorno para las rutas
+        base_path = os.getenv("COLABORADORES_PATH", os.path.expanduser("~/Proyectos/colaboradores"))
+        carpeta_origen = os.path.join(base_path, "originales")
+        
         if not os.path.exists(carpeta_origen):
-            QMessageBox.warning(self, "Error", "La carpeta de aprontes no existe.")
+            QMessageBox.warning(self, "Error", f"La carpeta de aprontes no existe: {carpeta_origen}")
             return
 
+        # Filtrar solo archivos que comiencen con 'A' y terminen en '.txt'
         archivos = [f for f in os.listdir(carpeta_origen) if f.startswith("A") and f.endswith(".txt")]
         self.ui.listArchivos.clear()
-        for archivo in archivos:
+        for archivo in sorted(archivos, reverse=True):  # Más recientes primero
             self.ui.listArchivos.addItem(QListWidgetItem(archivo))
 
     def obtener_fecha_larga(self, anio, semana, dia):
@@ -1133,4 +1086,17 @@ class Aprontes(QtWidgets.QWidget):
         except Exception as e:
             self.session.rollback()
             raise Exception(f"Error al guardar los cambios en la base de datos: {str(e)}")
+
+    def vista_previa_archivo(self, nombre_archivo):
+        # Usar ruta configurable
+        base_path = os.getenv("COLABORADORES_PATH", os.path.expanduser("~/Proyectos/colaboradores"))
+        ruta_archivo = os.path.join(base_path, "originales", nombre_archivo)
+        
+        try:
+            with open(ruta_archivo, "r", encoding=self.obtener_codificacion()) as f:
+                contenido = f.read()
+            return contenido
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo leer el archivo:\n{str(e)}")
+            return f"Error al leer el archivo: {str(e)}"
 

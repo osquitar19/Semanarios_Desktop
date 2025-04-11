@@ -56,16 +56,20 @@ class PesosFisicos(QWidget):
         self.hide()
         
     def cargar_lista_archivos(self):
-        """Carga la lista de archivos de pesos físicos desde la carpeta de originales"""
+        """Carga la lista de archivos de pesos físicos del directorio configurado"""
+        # Usar una ruta configurable con valor por defecto
+        base_path = os.getenv("COLABORADORES_PATH", os.path.expanduser("~/Proyectos/colaboradores"))
+        carpeta_origen = os.path.join(base_path, "originales")
+        
         self.ui.listArchivos.clear()
         
         # Verificar que la carpeta existe
-        if not os.path.exists(self.carpeta_originales):
+        if not os.path.exists(carpeta_origen):
             QMessageBox.warning(self, "Error", "La carpeta de originales no existe.")
             return
             
         # Filtrar archivos que comienzan con "PK" (Pesos Físicos) y terminan con ".txt"
-        archivos = [f for f in os.listdir(self.carpeta_originales) 
+        archivos = [f for f in os.listdir(carpeta_origen) 
                    if f.startswith("PK") and f.endswith(".txt")]
         
         # Ordenar por fecha (más recientes primero)
@@ -77,8 +81,9 @@ class PesosFisicos(QWidget):
             
     def cargar_archivo(self, item):
         """Carga el contenido del archivo seleccionado en el TextEdit"""
-        nombre_archivo = item.text()
-        ruta_archivo = os.path.join(self.carpeta_originales, nombre_archivo)
+        # Usar la misma lógica de ruta configurable
+        base_path = os.getenv("COLABORADORES_PATH", os.path.expanduser("~/Proyectos/colaboradores"))
+        ruta_archivo = os.path.join(base_path, "originales", item.text())
         
         try:
             # Determinar la codificación
@@ -92,16 +97,16 @@ class PesosFisicos(QWidget):
             lineas = [ln for ln in lineas if ln.strip()]
             
             # Generar nombre nuevo basado en la fecha
-            nuevo_nombre = self.generar_nombre_nuevo(nombre_archivo)
+            nuevo_nombre = self.generar_nombre_nuevo(item.text())
             self.ui.lblNombreNuevo.setText(nuevo_nombre)
             
             # Extraer la fecha formateada para la primera línea
             fecha_formateada = ""
             try:
-                if nombre_archivo.startswith("PK") and len(nombre_archivo) >= 9:
-                    anio = int(nombre_archivo[2:6])
-                    semana = int(nombre_archivo[6:8])
-                    dia_semana = int(nombre_archivo[8:9])
+                if item.text().startswith("PK") and len(item.text()) >= 9:
+                    anio = int(item.text()[2:6])
+                    semana = int(item.text()[6:8])
+                    dia_semana = int(item.text()[8:9])
                     
                     # Calcular la fecha
                     fecha_obj = self.calcular_fecha_desde_nombre(anio, semana, dia_semana)
@@ -1149,7 +1154,7 @@ class PesosFisicos(QWidget):
     def cargar_ui(self):
         """Carga el archivo .ui y asigna los widgets a self.ui"""
         loader = QUiLoader()
-        ui_file = QFile("ui/ui_pesos_fisicos.ui")  # Ruta al archivo .ui
+        ui_file = QFile("core/edit_txt_pesos_fisicos/ui_pesos_fisicos.ui")  # Ruta actualizada
         
         if not ui_file.open(QFile.ReadOnly):
             error_msg = f"No se pudo abrir el archivo UI: {ui_file.errorString()}"

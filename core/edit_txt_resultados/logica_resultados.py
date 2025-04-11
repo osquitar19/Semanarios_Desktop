@@ -44,12 +44,12 @@ class Resultados(QtWidgets.QWidget):
     def cargar_ui(self):
         """Carga el archivo .ui y asigna los widgets a self.ui"""
         loader = QUiLoader()
-        ui_file = QFile("ui/ui_resultados.ui")  # Ruta al archivo .ui
+        ui_file = QFile("core/edit_txt_resultados/ui_resultados.ui")  # Ruta actualizada
         
         if not ui_file.open(QFile.ReadOnly):
             error_msg = f"No se pudo abrir el archivo UI: {ui_file.errorString()}"
             print(error_msg)  # Mostrar el error en la consola
-            QtWidgets.QMessageBox.critical(self, "Error", error_msg)  # Mostrar un mensaje de error
+            QMessageBox.critical(self, "Error", error_msg)  # Mostrar un mensaje de error
             return
         
         self.ui = loader.load(ui_file, self)  # Cargar la interfaz
@@ -58,7 +58,7 @@ class Resultados(QtWidgets.QWidget):
         if not self.ui:
             error_msg = "Error al cargar la interfaz desde el archivo .ui"
             print(error_msg)  # Mostrar el error en la consola
-            QtWidgets.QMessageBox.critical(self, "Error", error_msg)  # Mostrar un mensaje de error
+            QMessageBox.critical(self, "Error", error_msg)  # Mostrar un mensaje de error
             return
         
         # Desactivar el "word wrap" en el QTextEdit
@@ -71,7 +71,10 @@ class Resultados(QtWidgets.QWidget):
     # 1. CARGA Y CONVERSIÓN (transformaciones)
     # -------------------------------------------------------------------------
     def cargar_archivo(self, item):
-        ruta_archivo = os.path.join("/Users/oscarorellana/Proyectos/colaboradores/originales", item.text())
+        # Usar la misma lógica de ruta configurable
+        base_path = os.getenv("COLABORADORES_PATH", os.path.expanduser("~/Proyectos/colaboradores"))
+        ruta_archivo = os.path.join(base_path, "originales", item.text())
+        
         try:
             with open(ruta_archivo, "r", encoding=self.obtener_codificacion()) as f:
                 lineas = f.readlines()
@@ -83,9 +86,11 @@ class Resultados(QtWidgets.QWidget):
             encabezados_a_eliminar = [
                 "JOCKEY CLUB DEL PERU\n",
                 "DEPARTAMENTO HIPICO\n",
-                "COMISION DE PROGRAMA\n"
+                "COMISION DE PROGRAMA\n",
             ]
             lineas = [ln for ln in lineas if ln not in encabezados_a_eliminar]
+
+
 
             # Procesar fecha y reemplazar línea de fecha
             nombre_archivo = item.text()
@@ -178,6 +183,7 @@ class Resultados(QtWidgets.QWidget):
                             recopilando_info = False  # Dejar de recopilar
                         
                         # Si es puesto 99, ignorar esta línea
+                        
                         if puesto == 99:
                             i += 1
                             continue
@@ -226,7 +232,6 @@ class Resultados(QtWidgets.QWidget):
                             lineas_procesadas.append(ln)
                             i += 1
                             continue
-                
                 # 3. Verificar si es línea de totales
                 if "---------- ----------" in ln:
                     es_linea_totales = True
@@ -284,10 +289,18 @@ class Resultados(QtWidgets.QWidget):
         """
         Transformaciones que preservan espacios:
         - Solo modifica texto específico sin afectar formato
+        - Elimina líneas que comiencen con "Macho" o "Hembra"
         """
         # Ejemplo de transformación que no afecta espacios
         texto = texto.replace("segundos", "s.")
-        return texto
+        
+        # Eliminar líneas que comiencen con "Macho" o "Hembra" después de quitar espacios
+        lineas = texto.split('\n')
+        lineas_filtradas = [ln for ln in lineas 
+                            if not ln.lstrip().startswith("Macho") and 
+                            not ln.lstrip().startswith("Hembra")]
+        
+        return '\n'.join(lineas_filtradas)
 
     # -------------------------------------------------------------------------
     # 2. VALIDACIÓN
@@ -307,15 +320,22 @@ class Resultados(QtWidgets.QWidget):
     # 3. GUARDAR ARCHIVO
     # -------------------------------------------------------------------------
     def guardar_archivo(self):
-        item = self.ui.listArchivos.currentItem()
-        if not item:
-            QMessageBox.warning(self, "Selección", "No se ha seleccionado ningún archivo.")
+        # Usar la misma lógica de ruta configurable
+        base_path = os.getenv("COLABORADORES_PATH", os.path.expanduser("~/Proyectos/colaboradores"))
+        nombre_archivo = self.ui.lblNombreNuevo.text()
+        
+        if not nombre_archivo:
+            QMessageBox.warning(self, "Error", "No hay archivo procesado para guardar.")
             return
-
+        
+        carpeta_destino = os.path.join(base_path, "procesados")
+        os.makedirs(carpeta_destino, exist_ok=True)
+        
+        ruta_destino = os.path.join(carpeta_destino, nombre_archivo)
+        
         contenido = self.ui.txtTexto.toPlainText()
-        nombre_nuevo = self.ui.lblNombreNuevo.text()
-        if not nombre_nuevo:
-            QMessageBox.warning(self, "Error", "No se ha generado un nuevo nombre de archivo.")
+        if not contenido:
+            QMessageBox.warning(self, "Error", "No hay contenido para guardar.")
             return
 
         # CheckBoxes
@@ -330,9 +350,9 @@ class Resultados(QtWidgets.QWidget):
         guardado_exitoso = False
         for nombre_carpeta, activo in carpetas.items():
             if activo:
-                ruta_destino = f"/Users/oscarorellana/Proyectos/colaboradores/{nombre_carpeta}"
+                ruta_destino = f"{ruta_destino}"
                 os.makedirs(ruta_destino, exist_ok=True)
-                ruta_archivo = os.path.join(ruta_destino, nombre_nuevo)
+                ruta_archivo = os.path.join(ruta_destino, nombre_archivo)
 
                 try:
                     with open(ruta_archivo, "w", encoding=self.obtener_codificacion()) as f:
@@ -362,7 +382,10 @@ class Resultados(QtWidgets.QWidget):
         menu.exec(QCursor.pos())
 
     def vista_rapida_archivo(self, nombre_archivo):
-        ruta_archivo = os.path.join("/Users/oscarorellana/Proyectos/colaboradores/originales", nombre_archivo)
+        # Usar ruta configurable en lugar de la ruta absoluta
+        base_path = os.getenv("COLABORADORES_PATH", os.path.expanduser("~/Proyectos/colaboradores"))
+        ruta_archivo = os.path.join(base_path, "originales", nombre_archivo)
+        
         try:
             codificacion = "latin-1" if self.ui.radioANSI.isChecked() else "utf-8"
             with open(ruta_archivo, "r", encoding=codificacion) as f:
@@ -416,14 +439,19 @@ class Resultados(QtWidgets.QWidget):
         return "latin-1" if self.ui.radioANSI.isChecked() else "utf-8"
 
     def cargar_lista_archivos(self):
-        carpeta_origen = "/Users/oscarorellana/Proyectos/colaboradores/originales"
+        """Carga la lista de archivos de resultados del directorio configurado"""
+        # Usar una ruta configurable con valor por defecto
+        base_path = os.getenv("COLABORADORES_PATH", os.path.expanduser("~/Proyectos/colaboradores"))
+        carpeta_origen = os.path.join(base_path, "originales")
+        
         if not os.path.exists(carpeta_origen):
-            QMessageBox.warning(self, "Error", "La carpeta de resultados no existe.")
+            QMessageBox.warning(self, "Error", f"La carpeta de resultados no existe: {carpeta_origen}")
             return
 
+        # Filtrar solo archivos que comiencen con 'R' y terminen en '.txt'
         archivos = [f for f in os.listdir(carpeta_origen) if f.startswith("R") and f.endswith(".txt")]
         self.ui.listArchivos.clear()
-        for archivo in archivos:
+        for archivo in sorted(archivos, reverse=True):  # Más recientes primero
             self.ui.listArchivos.addItem(QListWidgetItem(archivo))
 
     def obtener_fecha_larga(self, anio, semana, dia):

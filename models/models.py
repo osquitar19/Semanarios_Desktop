@@ -78,8 +78,11 @@ class Clasicos(Base):
     marcador = Column(VARCHAR(50), nullable=False, server_default=text("''"))
     grupo = Column(VARCHAR(3), nullable=False, server_default=text("''"))
 
-    # Se relacionará con ReunionCarreras si establecemos FK en esa tabla (ver más abajo)
-
+    # Relación con ReunionCarreras sin crear FK física
+    reunion_carreras = relationship("ReunionCarreras", 
+                                   back_populates="clasico",
+                                   primaryjoin="Clasicos.idClasico == ReunionCarreras.idClasico",
+                                   foreign_keys="ReunionCarreras.idClasico")
 
 class Colores(Base):
     __tablename__ = 'Colores'
@@ -523,7 +526,7 @@ class ReunionCarreras(Base):
     tipoTiempo = Column(TINYINT, server_default=text("'0'"))
     baranda = Column(TINYINT, server_default=text("'0'"))
     record = Column(TINYINT, server_default=text("'0'"))
-    idClasico = Column(SMALLINT)
+    idClasico = Column(SMALLINT, index=True)  # Sin ForeignKey
     idPremio = Column(SMALLINT, index=True)
     corrieron = Column(TINYINT, server_default=text("'0'"))
     premio1 = Column(DECIMAL(9, 2), server_default=text("'0.00'"))
@@ -555,6 +558,10 @@ class ReunionCarreras(Base):
     totalBoletos = Column(DECIMAL(7, 2), server_default=text("'0.00'"))
 
     condicion_nueva = relationship('CondicionesNuevas', back_populates="reunion_carreras")
+    clasico = relationship('Clasicos', 
+                          back_populates="reunion_carreras",
+                          primaryjoin="ReunionCarreras.idClasico == Clasicos.idClasico",
+                          foreign_keys="ReunionCarreras.idClasico")
     reuniones_caballos = relationship("ReunionCaballos", back_populates="reunion_carrera")
 
 
